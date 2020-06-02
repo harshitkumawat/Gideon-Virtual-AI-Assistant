@@ -10,6 +10,7 @@ from pprint import pprint
 from selenium import webdriver
 from datetime import datetime as dt
 import re
+import subprocess
 
 def suffix(d):
     return 'th' if 11<=d<=13 else {1:'st',2:'nd',3:'rd'}.get(d%10, 'th')
@@ -72,7 +73,6 @@ def takeCommand():
         print("Recognizing...")
         query = r.recognize_google(audio, language='en-in')
         print(f"Harshit Said:{query.upper()}\n")
-        print(len(query))
 
     except Exception as e:
         print(e)
@@ -94,7 +94,10 @@ def lightoff():
     elem1 = driver.find_element_by_id("S1on")
     elem1.click()
  
-
+#================================================================================#
+# Created Class send_email to Ask Gideon to get content and Send Email.    		 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
 class send_email():
 	def __init__(self):
 		self.to = ""
@@ -114,7 +117,7 @@ class send_email():
 	def get_email_content(self):
 		try:
 			speak("to whom you want to send an email..")
-			email = {'RAJ':'harshit20081998@gmail.com','NONE':'1','NEEL':'h7043377227k@gmail.com'}
+			email = {'RAJ':'harshit20081998@gmail.com','NONE':'1','NEEL':'h7043377227k@gmail.com','DEEPU':'diplata.kumawat55@gmail.com','HAPPY':'hemlata.kumawat7@gmail.com'}
 			to = takeCommand()
 			if email.get(to.upper())==None:
 				print("Sorry Harshit..{} is not in your contact list".format(to))
@@ -146,7 +149,116 @@ class send_email():
 	    server.login('harshit2772@gmail.com', 'Harshit123')
 	    server.sendmail('harshit2772@gmail.com', self.to, self.content)
 	    server.close()
+#================================================================================#
+# End																			 #
+#================================================================================# 
 
+#================================================================================#
+# Created class to Ask Gideon to open windows application						 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
+class open_close_application():
+	def __init__(self):
+		pass
+
+    # Function to open Vs Code
+	def OPEN_VS_CODE(self):
+		codePath = "C:\\Users\\Harry\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"#ADD THE PATH OF THE PROGEM HERE
+		subprocess.Popen(codePath)
+		speak("Okay Harshit.. opening Visual Studio Code.")
+
+	# Function to Close Vs Code	
+	def CLOSE_VS_CODE(self):
+		result=os.system("taskkill /F /IM Code.exe")
+		speak("Okay Harshit.. Closing Visual Studio Code.")
+		if result == 0:
+			print("All VS code should be death now...")
+		else:
+			print("Error executing taskkill command !!!")
+
+	# Function to Open Calculator
+	def OPEN_Calculator(self):
+		subprocess.Popen('C:\\Windows\\System32\\calc.exe')
+		speak("Okay Harshit.. opening Calculator.")
+
+	# Function to Close Calculator	
+	def CLOSE_Calculator(self):
+		result=os.system("taskkill /F /IM calculator.exe")
+		speak("Okay Harshit.. Closing Calculator.")
+		if result == 0:
+			print("All Calculator should be death now...")
+		else:
+			print("Error executing taskkill command !!!")
+
+	def OPEN_Word(self):
+		speak('Okay harshit. opening Microsoft Word.')
+		os.system('start winword')
+
+	# Function to Close Vs Code	
+	def CLOSE_Word(self):
+		speak('Okay harshit. closing Microsoft Word.')
+		result=os.system("taskkill /F /IM winword.exe")
+		if result == 0:
+			print("All Word files should be death now...")
+		else:
+			print("Error executing taskkill command !!!")
+
+	# Function to search files
+	def search_drive(self):
+		speak("Can you please tell me in which drive you want to search  ?")
+		drive = takeCommand()
+		if re.search(".*(E DRIVE|EDRIVE|D DRIVE|DDRIVE|C DRIVE|CDRIVE|SEA DRIVE|SEE DRIVE).*",drive.upper()):
+			if re.search(".*(E DRIVE|EDRIVE).*",drive.upper()):
+				speak("Yes harshit i am in E Drive..")
+				self.search_file_folder('E:')
+			elif re.search(".*(D DRIVE|DDRIVE|THE DRIVE).*",drive.upper()):
+				speak("Yes harshit i am in D Drive..")
+				self.search_file_folder('D:')
+			elif re.search(".*(C DRIVE|CDRIVE).*",drive.upper()):
+				speak("Yes harshit i am in C Drive..")
+				self.search_file_folder('C:')
+		elif re.search(".*(CANCEL|DON'T|NO|LEAVE).*",drive.upper()) and drive.upper()!="NONE":
+			speak("Okay Harshit Cancelling the search..")
+		else:
+			speak("I didn't get you..")
+			self.search_drive()
+
+				
+
+	def search_file_folder(self,drive):
+		speak("What should i search? a File or a Folder ?")
+		arr = os.listdir(drive+'/')
+		ans = takeCommand()
+		if re.search(".*(FILE|5|FILES).*",ans.upper()):
+			files = [i for i in arr if os.path.isfile(drive+'/'+i)]
+			if len(files)!=0:
+				speak("okay Harshit.. here is the list {}".format(files))
+			else:
+				speak("No files present in this drive")
+				self.search_file_folder(drive)
+		elif re.search(".*(FOLDER|FOLDERS).*",ans.upper()):
+			folders = [i for i in arr if os.path.isdir(drive+'/'+i)]
+			if len(folders)!=0:
+				speak("list of folders are {}".format(folders))
+			else:
+				speak("No folders present in this folder")
+				self.search_file_folder(drive)
+		elif re.search(".*(GO BACK|GO TO PREVIOUS|MOVE BACK|MOVE TO PREVIOUS).*",ans.upper()):
+			speak("Going Back to Drive list..")
+			self.search_drive()
+		elif re.search(".*(CANCEL|DON'T|NO|LEAVE).*",ans.upper()) and ans.upper()!="NONE":
+			speak("Okay Harshit Cancelling the search..")
+		else:
+			speak("I didn't get you..")
+			self.search_file_folder(drive)
+
+
+
+
+
+#================================================================================#
+# End																			 #
+#================================================================================# 
 
 if __name__ == "__main__":
     wishMe()
@@ -174,8 +286,8 @@ if __name__ == "__main__":
                 print("done")
             try:
                 text = r.recognize_google(audio)
-                print('google think you said:\n' +text +'.com')
-                wb.get(chrome_path).open(text+'.com')
+                print('google think you said:\n' +text)
+                wb.get(chrome_path).open(text)
             except Exception as e:
                 print(e)
         
@@ -217,25 +329,91 @@ if __name__ == "__main__":
             speak(month)
             speak(year)
 
-
+#================================================================================#
+# Ask Gideon to Send Email														 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
         elif 'email to harry' and 'send email' in query:
         	sending_email = send_email()
         	sending_email.get_email_content()
-                  
+#================================================================================#
+# End																			 #
+#================================================================================# 
 
+#================================================================================#
+# Ask Gideon to Open Visual Studio Code 										 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
         elif re.search(".*OPEN.*(VS CODE|VISUAL STUDIO CODE).*",query.upper()):
-        #elif 'OPEN VISUAL STUDIO CODE' in query.upper() or 'OPEN VS CODE' in query.upper():
-        	codePath = "C:\\Users\\Harry\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"#ADD THE PATH OF THE PROGEM HERE
-        	os.startfile(codePath)
+        	open_vs_code = open_close_application()
+        	open_vs_code.OPEN_VS_CODE()
+#================================================================================#
+# End																			 #
+#================================================================================# 
 
+#================================================================================#
+# Ask Gideon to Close Visual Studio Code 										 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
         elif re.search(".*CLOSE.*(VS CODE|VISUAL STUDIO CODE).*",query.upper()):
-        #elif ('CLOSE VS CODE') in query.upper() or 'CLOSE VISUAL STUDIO CODE' in query.upper() or 'CLOSE THE VS CODE' in query.upper() or ('CLOSE THE VISUAL STUDIO CODE')  in query.upper():
-        	codePath = "C:\\Users\\Harry\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"#ADD THE PATH OF THE PROGEM HERE
-        	result=os.system("taskkill /F /IM Code.exe")
-        	if result == 0:
-        		print("All nodepads should be death now...")
-        	else:
-        		print("Error executing taskkill command !!!")
+        	close_vs_code = open_close_application()
+        	close_vs_code.CLOSE_VS_CODE()
+#================================================================================#
+# End																			 #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Calculator  													 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
+        elif re.search(".*OPEN.*(CALCI|CALCULATOR).*",query.upper()):
+        	Calculator = open_close_application()
+        	Calculator.OPEN_Calculator()
+#================================================================================#
+# End																			 #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Calculator 														 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
+        elif re.search(".*CLOSE.*(CALCI|CALCULATOR).*",query.upper()):
+        	Calculator.CLOSE_Calculator()
+#================================================================================#
+# End																			 #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to open new word document 											 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
+        elif re.search(".*OPEN.*(WORD|DOCUMENT).*",query.upper()):
+        	word = open_close_application()
+        	word.OPEN_Word()
+#================================================================================#
+# End																			 #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Close word document												 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
+        elif re.search(".*CLOSE.*(WORD|DOCUMENT).*",query.upper()):
+        	word.CLOSE_Word()
+#================================================================================#
+# End																			 #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to search file														 #
+# Author : Harshit Kumawat														 #
+#================================================================================# 
+        elif re.search(".*SEARCH.*(FILE|FOLDER).*",query.upper()):
+        	search = open_close_application()
+        	search.search_drive()
+#================================================================================#
+# End																			 #
+#================================================================================# 
 
         elif 'open C' in query:
             os.system('explorer C://{}'.format(query.replace('Open','')))
