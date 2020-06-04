@@ -11,6 +11,7 @@ from selenium import webdriver
 from datetime import datetime as dt
 import re
 import subprocess
+import json
 
 def suffix(d):
     return 'th' if 11<=d<=13 else {1:'st',2:'nd',3:'rd'}.get(d%10, 'th')
@@ -30,30 +31,20 @@ def speak(audio):
 def wishMe():
     #speak("Welcome back Harshit")
     hour = int(datetime.datetime.now().hour)
-    print(hour)
-    year = int(datetime.datetime.now().year)
-    month = int(datetime.datetime.now().month)
-    date = int(datetime.datetime.now().day)
     Time = datetime.datetime.now().strftime("%I:%M:%S") 
     print(Time)
-    print(date)
-    print(month)
-    print(year)
     #speak("the current Time is")
     #speak(Time)
     #speak("the current Date is")
     print(custom_strftime('%B {S}, %Y', dt.now()))
     #speak(custom_strftime('%B {S}, %Y', dt.now()))
-    #speak(date)
-    #speak(month)
-    #speak(year)
-    if hour>=6 and hour<12:
+    if hour>=4 and hour<12:
         speak("Good Morning Harshit!")
 
     elif hour>=12 and hour<18:
         speak("Good Afternoon Harshit!")
 
-    elif hour>=18 and hour<24:
+    elif hour>=18 and hour<22:
         speak("Good Evening Harshit!")
 
     else:
@@ -146,7 +137,7 @@ class send_email():
 	    server = smtplib.SMTP('smtp.gmail.com', 587)
 	    server.ehlo()
 	    server.starttls()
-	    server.login('harshit2772@gmail.com', 'Harshit123')
+	    server.login('********@gmail.com', '**********')
 	    server.sendmail('harshit2772@gmail.com', self.to, self.content)
 	    server.close()
 #================================================================================#
@@ -203,7 +194,7 @@ class open_close_application():
 		else:
 			print("Error executing taskkill command !!!")
 
-	# Function to search files
+    # Function to open drive
 	def search_drive(self):
 		speak("Can you please tell me in which drive you want to search  ?")
 		drive = takeCommand()
@@ -224,7 +215,7 @@ class open_close_application():
 			self.search_drive()
 
 				
-
+    # Function to search file and folder in drive      
 	def search_file_folder(self,drive):
 		speak("What should i search? a File or a Folder ?")
 		arr = os.listdir(drive+'/')
@@ -252,8 +243,62 @@ class open_close_application():
 			speak("I didn't get you..")
 			self.search_file_folder(drive)
 
+    
+    #def Open_Mail_App(self):
+        
+        #speak("Opening Mail App..")
+        #s.system('start outlookmail:')
 
-
+class get_weather_report_from_openweathermap():
+        def __init__(self):
+            self.api_key = "6dad8caa267eb523c37470c8f23621c6"
+            self.base_url = "http://api.openweathermap.org/data/2.5/weather?"
+            self.city_name = "Surat"
+        # Function to get Weather details
+        def get_weather_report(self,query):
+            get_city = query.upper().split()
+            try:
+                idx = get_city.index('IN') or get_city.index('OF')
+                self.city_name = get_city[idx+1]
+            except:
+                self.city_name = "Surat"
+            complete_url = self.base_url + "appid=" + self.api_key + "&q=" + self.city_name 
+            res = requests.get(complete_url)
+            print(res)
+            data = res.json()
+            print(data)
+            weather = data['weather'] [0] ['main'] 
+            temp = data['main']['temp']
+            wind_speed = data['wind']['speed']
+            latitude = data['coord']['lat']
+            longitude = data['coord']['lon']
+            description = data['weather'][0]['description']
+            speak("Current Weather in {}".format(self.city_name))
+            speak('Temperature : {0:.2f} degree celcius'.format(int(temp)-273.15))
+            print('Wind Speed : {0:.2f} m/s'.format(wind_speed))
+            print('Latitude : {}'.format(latitude))
+            print('Longitude : {}'.format(longitude))
+            print('Description : {}'.format(description))
+            print('weather is: {} '.format(weather))
+            speak('weather is : {} '.format(weather))
+            speak("Harshit, do you want detailed weather report ?")
+            while True:
+                detailed_ans = takeCommand()
+                if re.search("(YES|SURE|OFCOURSE|WHY NOT)",detailed_ans.upper()) and detailed_ans.upper()!="NONE":
+                    speak("Okay, here is the detailed report..")
+                    speak('Temperature : {0:.2f} degree celcius'.format(int(temp)-273.15))
+                    speak('weather is : {} '.format(weather))
+                    speak("Wind Speed : {0:.2f} kilometer per hour".format(wind_speed*(18/5)))
+                    speak("Latitude : {}".format(latitude))
+                    speak("Longitude : {}".format(longitude))
+                    speak("Description : {}".format(description))
+                elif re.search("(NO|DON'T)",detailed_ans.upper()) and detailed_ans.upper()!="NONE":
+                    speak("Okay harshit..Tell me what else i can do for you?")
+                    return
+                else:
+                    speak("I didn't get you?")
+                    speak("Harshit, do you want detailed weather report ?")
+                
 
 
 #================================================================================#
@@ -291,30 +336,9 @@ if __name__ == "__main__":
             except Exception as e:
                 print(e)
         
-        elif 'how is the weather' and 'weather' in query:
-
-            url = 'https://api.openweathermap.org/'#Open api link here
-
-            res = requests.get(url)
-
-            data = res.json()
-
-            weather = data['weather'] [0] ['main'] 
-            temp = data['main']['temp']
-            wind_speed = data['wind']['speed']
-
-            latitude = data['coord']['lat']
-            longitude = data['coord']['lon']
-
-            description = data['weather'][0]['description']
-            speak('Temperature : {} degree celcius'.format(temp))
-            print('Wind Speed : {} m/s'.format(wind_speed))
-            print('Latitude : {}'.format(latitude))
-            print('Longitude : {}'.format(longitude))
-            print('Description : {}'.format(description))
-            print('weather is: {} '.format(weather))
-            speak('weather is : {} '.format(weather))
-
+        elif re.search("(WEATHER)",query.upper()):
+            weather_report = get_weather_report_from_openweathermap()
+            weather_report.get_weather_report(query) 
 
         elif 'the time' in query:
             strTime = datetime.datetime.now().strftime("%I:%M:%S")    
@@ -339,6 +363,51 @@ if __name__ == "__main__":
 #================================================================================#
 # End																			 #
 #================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Open Mail App                                                    #
+# Author : Harshit Kumawat                                                       #
+#================================================================================# 
+        elif re.search("(MAIL APP|OPEN MAIL APP|OPEN MAIL)",query.upper()):
+            #open_Mail = open_close_applications()
+            #open_Mail.Open_Mail_App()
+            speak("Opening Mail App..")
+            os.system('start outlookmail:')
+             # Function to close Mail App
+#================================================================================#
+# Ask Gideon to Close Mail App                                                   #
+#================================================================================# 
+        elif re.search("(CLOSE MAIL APP|CLOSE MAIL)",query.upper()):
+            #close_Mail = open_close_applications()
+            #closeMail.Close_Mail_App()
+            speak('Okay harshit. closing Mail App.')
+            result=os.system("taskkill /F /IM HxOutlook.exe")
+            if result == 0:
+                print("All Mail App should be death now...")
+            else:
+                print("Error executing taskkill command !!!")
+#================================================================================#
+# End                                                                            #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Open Camera                                                      #
+# Author : Harshit Kumawat                                                       #
+#================================================================================# 
+        elif re.search("(CLICK.*PICTURE|OPEN.*CAMERA|ON.*WEB CAMERA|ON.*WEB CAM)",query.upper()):
+            speak("Switching on the Web Cam..")
+            os.system('start microsoft.windows.camera:')
+#================================================================================#
+#  Ask Gideon to Close Camera                                                    #
+#================================================================================# 
+        elif re.search("(CLOSE.*CAMERA|OFF.*WEB CAMERA|OFF.*WEB CAM)",query.upper()):
+            speak("Switching off the Web Cam..")
+            result=os.system("taskkill /F /IM  WindowsCamera.exe")
+            if result == 0:
+                print("All Cameras should be death now...")
+            else:
+                print("Error executing taskkill command !!!") 
+           
 
 #================================================================================#
 # Ask Gideon to Open Visual Studio Code 										 #
