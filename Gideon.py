@@ -137,7 +137,7 @@ class send_email():
 	    server = smtplib.SMTP('smtp.gmail.com', 587)
 	    server.ehlo()
 	    server.starttls()
-	    server.login('harshit2772@gmail.com', 'Harshit123')
+	    server.login('********@gmail.com', '**********')
 	    server.sendmail('harshit2772@gmail.com', self.to, self.content)
 	    server.close()
 #================================================================================#
@@ -194,7 +194,7 @@ class open_close_application():
 		else:
 			print("Error executing taskkill command !!!")
 
-	# Function to open drive
+    # Function to open drive
 	def search_drive(self):
 		speak("Can you please tell me in which drive you want to search  ?")
 		drive = takeCommand()
@@ -243,6 +243,11 @@ class open_close_application():
 			speak("I didn't get you..")
 			self.search_file_folder(drive)
 
+    
+    #def Open_Mail_App(self):
+        
+        #speak("Opening Mail App..")
+        #s.system('start outlookmail:')
 
 class get_weather_report_from_openweathermap():
         def __init__(self):
@@ -358,6 +363,51 @@ if __name__ == "__main__":
 #================================================================================#
 # End																			 #
 #================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Open Mail App                                                    #
+# Author : Harshit Kumawat                                                       #
+#================================================================================# 
+        elif re.search("(MAIL APP|OPEN MAIL APP|OPEN MAIL)",query.upper()):
+            #open_Mail = open_close_applications()
+            #open_Mail.Open_Mail_App()
+            speak("Opening Mail App..")
+            os.system('start outlookmail:')
+             # Function to close Mail App
+#================================================================================#
+# Ask Gideon to Close Mail App                                                   #
+#================================================================================# 
+        elif re.search("(CLOSE MAIL APP|CLOSE MAIL)",query.upper()):
+            #close_Mail = open_close_applications()
+            #closeMail.Close_Mail_App()
+            speak('Okay harshit. closing Mail App.')
+            result=os.system("taskkill /F /IM HxOutlook.exe")
+            if result == 0:
+                print("All Mail App should be death now...")
+            else:
+                print("Error executing taskkill command !!!")
+#================================================================================#
+# End                                                                            #
+#================================================================================# 
+
+#================================================================================#
+# Ask Gideon to Open Camera                                                      #
+# Author : Harshit Kumawat                                                       #
+#================================================================================# 
+        elif re.search("(CLICK.*PICTURE|OPEN.*CAMERA|ON.*WEB CAMERA|ON.*WEB CAM)",query.upper()):
+            speak("Switching on the Web Cam..")
+            os.system('start microsoft.windows.camera:')
+#================================================================================#
+#  Ask Gideon to Close Camera                                                    #
+#================================================================================# 
+        elif re.search("(CLOSE.*CAMERA|OFF.*WEB CAMERA|OFF.*WEB CAM)",query.upper()):
+            speak("Switching off the Web Cam..")
+            result=os.system("taskkill /F /IM  WindowsCamera.exe")
+            if result == 0:
+                print("All Cameras should be death now...")
+            else:
+                print("Error executing taskkill command !!!") 
+           
 
 #================================================================================#
 # Ask Gideon to Open Visual Studio Code 										 #
