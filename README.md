@@ -1,3 +1,3 @@
-# Giedon---Virtual-AI-Assistant
+# Gideon-Virtual-AI-Assistant
 
 ### Python Chatbot
