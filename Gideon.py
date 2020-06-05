@@ -12,6 +12,9 @@ from datetime import datetime as dt
 import re
 import subprocess
 import json
+from apiclient import discovery
+from httplib2 import Http
+from oauth2client import client, file, tools
 
 def suffix(d):
     return 'th' if 11<=d<=13 else {1:'st',2:'nd',3:'rd'}.get(d%10, 'th')
@@ -71,19 +74,6 @@ def takeCommand():
         speak("Say that again Please...")
         return "None"
     return query
-
-
-def lighton():
-    driver = webdriver.Chrome('E:\\Project\\Speech recognition\\chromedriver.exe')#add the location of the chrome Drivers
-    driver.get("https://Add here.000webhostapp.com/main.html") #Add the webhost name
-    elem1 = driver.find_element_by_id("S1off")
-    elem1.click()
-
-def lightoff():
-    driver = webdriver.Chrome('E:\\Project\\Speech recognition\\chromedriver.exe')
-    driver.get("https://Add here.000webhostapp.com/main.html") #Add the webhost name
-    elem1 = driver.find_element_by_id("S1on")
-    elem1.click()
  
 #================================================================================#
 # Created Class send_email to Ask Gideon to get content and Send Email.    		 #
@@ -243,11 +233,13 @@ class open_close_application():
 			speak("I didn't get you..")
 			self.search_file_folder(drive)
 
-    
-    #def Open_Mail_App(self):
-        
-        #speak("Opening Mail App..")
-        #s.system('start outlookmail:')
+#================================================================================#
+# End                                                                            #
+#================================================================================# 
+
+#================================================================================#
+# Class to get Weather  report from openweathermap                               #
+#================================================================================# 
 
 class get_weather_report_from_openweathermap():
         def __init__(self):
@@ -299,11 +291,115 @@ class get_weather_report_from_openweathermap():
                     speak("I didn't get you?")
                     speak("Harshit, do you want detailed weather report ?")
                 
-
+#================================================================================#
+# End                                                                            #
+#================================================================================# 
 
 #================================================================================#
-# End																			 #
+# Class to Get file from Google Drive Using API                                  #
 #================================================================================# 
+class Google_Drive_API():
+    def __init__(self):
+        credentials_file_path = './credentials/credentials.json'
+        clientsecret_file_path = './credentials/client_secret.json'
+        # define API scope
+        SCOPE = 'https://www.googleapis.com/auth/drive'
+        # define store
+        store = file.Storage(credentials_file_path)
+        credentials = store.get()
+        # get access token
+        if not credentials or credentials.invalid:
+            flow = client.flow_from_clientsecrets(clientsecret_file_path, SCOPE)
+            credentials = tools.run_flow(flow, store)
+        self.http = credentials.authorize(Http())
+        self.drive = discovery.build('drive', 'v3', http=self.http)
+    def retrieve_all_files(self,api_service):
+        results = []
+        page_token = None
+
+        while True:
+            try:
+                param = {}
+
+                if page_token:
+                    param['pageToken'] = page_token
+
+                files = api_service.files().list(**param).execute()
+                # append the files from the current result page to our list
+                results.extend(files.get('files'))
+                # Google Drive API shows our files in multiple pages when the number of files exceed 100
+                page_token = files.get('nextPageToken')
+
+                if not page_token:
+                    break
+
+            except errors.HttpError as error:
+                print(f'An error has occurred: {error}')
+                speak("An error has occurred {}".format(error))
+                break
+
+        return results
+
+    def list_(self,file_to_list,type_of_file):
+        if len(file_to_list)!=0:
+            speak("Okay Harshit. Their are {} {} in your Drive..".format(len(file_to_list),type_of_file))
+            while True:
+                speak("Should i list all files?")
+                ans = takeCommand()
+                if re.search("(YES|SURE|WHY NOT|YUP|YEAH)",ans.upper()) and ans.upper()!="NONE":
+                    speak("Cool, Here is the list. {}".format(file_to_list))
+                elif re.search("(NO|LEAVE|DON'T|IT'S FINE|IT'S OK)",ans.upper()) and ans.upper()!="NONE":
+                    speak("Okay no problem.")
+                    return
+                else:
+                    speak("Sorry, I didn't get you")
+        else:
+            speak("Sorry harshit, their is no {} in your Drive..".format(type_of_file))
+
+
+    def Search_File(self):
+        speak("getting info from your google drive...")
+        all_files = self.retrieve_all_files(self.drive)
+        speak("Okay Harshit. Their are {} files and folders in your Drive..".format(len(all_files)))
+        while True:
+            speak("What should i search file or folder?")
+            file_or_folder = takeCommand()
+            if 'FILE' in file_or_folder.upper():
+                speak("Okay! Which file?")
+                filename_to_search = takeCommand()
+                if re.search("WORD",filename_to_search.upper()):
+                    word = []
+                    for file in all_files:
+                        if 'word' in file.get('mimeType'):
+                            word.append(file.get('name'))
+                    self.list_(word,'Word File')
+
+                elif re.search("PDF",filename_to_search.upper()):
+                    pdf = []
+                    for file in all_files:
+                        if 'pdf' in file.get('mimeType'):
+                            pdf.append(file.get('name'))
+                    self.list_(pdf,'pdf')
+
+                elif re.search("(IMAGES|IMAGE|PICTURES|PICTURE)",filename_to_search.upper()):
+                    image = []
+                    for file in all_files:
+                        if 'image' in file.get('mimeType'):
+                            image.append(file.get('name'))
+                    self.list_(image,'Image')
+            elif 'FOLDER' in file_or_folder.upper():
+                folder = []
+                for file in all_files:
+                    if 'folder' in file.get('mimeType'):
+                        folder.append(file.get('name'))
+                self.list_(folder,'Folder')
+            elif re.search("(NO|LEAVE|DON'T|IT'S FINE|IT'S OK|NOTHING)",file_or_folder.upper()) and file_or_folder.upper()!="NONE":
+                speak("Okay no problem. What else i can do ?")
+                return
+            else:
+                speak("Sorry, I didn't get you")
+
+
 
 if __name__ == "__main__":
     wishMe()
@@ -407,7 +503,9 @@ if __name__ == "__main__":
                 print("All Cameras should be death now...")
             else:
                 print("Error executing taskkill command !!!") 
-           
+#================================================================================#
+# End                                                                            #
+#================================================================================#            
 
 #================================================================================#
 # Ask Gideon to Open Visual Studio Code 										 #
@@ -474,32 +572,27 @@ if __name__ == "__main__":
 #================================================================================# 
 
 #================================================================================#
+# Ask Gideon to search file in Google Drive                                      #
+# Author : Harshit Kumawat                                                       #
+#================================================================================# 
+        elif re.search("(GOOGLE DRIVE|SEARCH.*GOOGLE DRIVE|DRIVE)",query.upper()):
+            google_drive_search = Google_Drive_API()
+            google_drive_search.Search_File()
+
+
+#================================================================================#
+# End                                                                            #
+#================================================================================# 
+#================================================================================#
 # Ask Gideon to search file														 #
 # Author : Harshit Kumawat														 #
 #================================================================================# 
-        elif re.search(".*SEARCH.*(FILE|FOLDER).*",query.upper()):
+        elif re.search("SEARCH.*(FILE|FOLDER)",query.upper()):
         	search = open_close_application()
         	search.search_drive()
 #================================================================================#
 # End																			 #
 #================================================================================# 
-
-        elif 'open C' in query:
-            os.system('explorer C://{}'.format(query.replace('Open','')))
-
-        
-        elif 'turn on lights' in query:
-            speak("OK,sir turning on the Lights")
-            lighton()
-            speak("Lights are on")
-        
-        elif 'turn off lights' in query:
-            speak("OK,sir turning off the Lights")
-            lightoff()
-            speak("Lights are off")
-
-
-
         elif 'goodbye' in query:
             speak("good bye harshit, see you soon.")
             quit()
